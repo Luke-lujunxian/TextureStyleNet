@@ -156,3 +156,4 @@ trainingOutput/
 nvdiffrast/
 LinearStyleTransfer/
 models/*
+.vscode/
