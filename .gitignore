@@ -154,7 +154,14 @@ cython_debug/
 
 trainingOutput/
 nvdiffrast/
-LinearStyleTransfer/
 models/*
 .vscode/
 generatedTexture/
+AnyNet/
+generatedTextureSPNMASK
+generatedTextureSPN
+
+LinearStyleTransfer/*
+!LinearStyleTransfer/libs/
+LinearStyleTransfer/libs/*
+!LinearStyleTransfer/libs/spn_t1
