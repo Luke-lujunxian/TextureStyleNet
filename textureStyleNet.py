@@ -16,6 +16,7 @@ import pywavefront
 import torchvision.transforms as transforms
 from PIL import Image
 import renderUtil
+from itertools import chain
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--vgg_dir", default='models/vgg_r41.pth',
@@ -40,9 +41,9 @@ parser.add_argument("--niter", type=int,default=1000,
                     help='iterations to train the model')
 parser.add_argument('--loadSize', type=int, default=300,
                     help='scale image size')
-parser.add_argument('--fineSize', type=int, default=256,
+parser.add_argument('--fineSize', type=int, default=512,
                     help='crop image size')
-parser.add_argument("--lr", type=float, default=1e-2,
+parser.add_argument("--lr", type=float, default=1e-5,
                     help='learning rate')
 parser.add_argument("--content_weight", type=float, default=1.0,
                     help='content loss weight')
@@ -99,9 +100,9 @@ for param in vgg.parameters():
     param.requires_grad = False
 for param in vgg5.parameters():
     param.requires_grad = False
-
 for param in dec.parameters():
-    param.requires_grad = True
+    param.requires_grad = False
+
 for param in matrix.parameters():
     param.requires_grad = True
 
@@ -134,7 +135,7 @@ transform = transforms.Compose([
 
 content = Image.open("Horse.tga").convert("RGB") #renderUtil.textureLoader("Horse.tga",opt.fineSize)
 content = transform(content).unsqueeze(0)
-style = Image.open("0001.png").convert("RGB")
+style = Image.open("0002.png").convert("RGB")
 style = transform(style).unsqueeze(0)
 model = renderUtil.modelLoader("horse2.obj")
 ################# TRAINING #################
@@ -166,13 +167,16 @@ for iteration in range(1,opt.niter+1):
     #print(texture.shape)
     texture = torch.swapaxes(texture,1,2)
     texture = torch.swapaxes(texture,2,3)
-    cb,cc,ch,cw = texture.size()
-    texture = texture.view(cc,ch,cw)
+    #cb,cc,ch,cw = texture.size()
+    texture = texture.squeeze()
     #print(texture.shape)
     texture = texture.contiguous()
     #print(texture.shape)
     #render
-    views = renderUtil.randomViewRender(model[0],model[1],model[2],model[3],texture,size=opt.fineSize)
+    if iteration % 5 == 0 or iteration < 5:
+        vutils.save_image(transfer,f'./generatedTexture/transfered_{iteration}.png',normalize=True,scale_each=True,nrow=opt.batchSize)
+        print('Transferred image saved at transfered.png')
+    views = renderUtil.randomViewRender(model[0],model[1],model[2],model[3],texture,views=1,size=opt.fineSize)
 
 
     train_losses = 0

@@ -83,30 +83,30 @@ def textureLoader(path:str,fineSize):
 #https://github.com/pywavefront/PyWavefront/issues/87
 
 def randomViewRender(vtx_pos, pos_idx, vtx_uv, uv_idx, tex, views=6, display = False,size = 1024):
-    ang = 0.0
+    ang = 45
     glctx = dr.RasterizeGLContext()
     results = []
     for _ in range(views):
 
         # Random rotation/translation matrix for optimization.
-        r_rot = util.random_rotation_translation(0.25)
+        r_rot = util.random_rotation(0.25)
 
         # Smooth rotation for display.
         a_rot = np.matmul(util.rotate_x(-0.4), util.rotate_y(ang))
         dist = np.random.uniform(0.0, 48.5)
 
         proj  = util.projection(x=0.4, n=1.0, f=200.0)
-        r_mv  = np.matmul(util.translate(0, -5, -3), r_rot)
+        r_mv  = np.matmul(util.translate(0, -0.5, -2), r_rot)
         r_mvp = np.matmul(proj, r_mv).astype(np.float32)
-        a_mv  = np.matmul(util.translate(0, -.5, -3), a_rot)
+        a_mv  = np.matmul(util.translate(0, -0.5, -2), a_rot)
         a_mvp = np.matmul(proj, a_mv).astype(np.float32)
 
         ### render
-        color = render(glctx, r_mvp, vtx_pos, pos_idx, vtx_uv, uv_idx, tex, size, True, 3)
+        color = render(glctx, r_mvp, vtx_pos, pos_idx, vtx_uv, uv_idx, tex, size, False, 6)
         results.append(color)
-        #with torch.no_grad():
-        #    color = render(glctx, a_mvp, vtx_pos, pos_idx, vtx_uv, uv_idx, tex, 768, False, 3)[0].cpu().numpy()[::-1]
-        #    util.display_image(color, size=1024, title='1')
+        with torch.no_grad():
+            color = render(glctx, a_mvp, vtx_pos, pos_idx, vtx_uv, uv_idx, tex, 1024, True, 6)[0].cpu().numpy()[::-1]
+            util.display_image(color, size=1024, title='1')
 
-        #ang += 0.01
+        ang += 0.01
     return tuple(results) 

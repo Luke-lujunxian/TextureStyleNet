@@ -49,6 +49,11 @@ def random_rotation_translation(t):
     m[:3, 3] = np.random.uniform(-t, t, size=[3])
     return m
 
+def random_rotation(t):
+    m = random_rotation_translation(t)
+    m[:3,3] = np.array([0,0,0])
+    return m
+
 #----------------------------------------------------------------------------
 # Bilinear downsample by 2x.
 #----------------------------------------------------------------------------
