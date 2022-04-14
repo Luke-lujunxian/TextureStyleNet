@@ -161,7 +161,6 @@ AnyNet/
 generatedTextureSPNMASK
 generatedTextureSPN
 
-LinearStyleTransfer/*
-!LinearStyleTransfer/libs/
-LinearStyleTransfer/libs/*
-!LinearStyleTransfer/libs/spn_t1
+LinearStyleTransfer/*/
+
+!LinearStyleTransfer/libs
