@@ -1,6 +1,6 @@
 # TextureStyleNet
  
-Early work
+Early work for COMP5214 project
 
 ## Requirements
 Install according to respective guide 
@@ -20,6 +20,6 @@ Main function
 textureStyleNet.py 
 ```
 
-## Dis
+## Disclaimer
 
 `util.py` is from [LinearStyleTransfer](https://github.com/sunshineatnoon/LinearStyleTransfer)
