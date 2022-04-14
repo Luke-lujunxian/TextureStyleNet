@@ -60,6 +60,8 @@ parser.add_argument("--layer", default="r41",
                     help='which features to transfer, either r31 or r41')
 parser.add_argument("--matrixPath", default='models/r41.pth',
                     help='pre-trained model path')
+parser.add_argument("--spn_dir", default='models/r41_spn.pth',
+                    help='path to pretrained SPN model')
 
 ################# PREPARATIONS #################
 opt = parser.parse_args()
@@ -89,6 +91,9 @@ vgg = encoder4()
 dec = decoder4()
 matrix = MulLayer(opt.layer)
 vgg5 = loss_network()
+spn = SPN()
+
+spn.load_state_dict(torch.load(opt.spn_dir))
 
 vgg.load_state_dict(torch.load(opt.vgg_dir))
 dec.load_state_dict(torch.load(opt.decoder_dir))
@@ -102,6 +107,8 @@ for param in vgg.parameters():
 for param in vgg5.parameters():
     param.requires_grad = False
 for param in dec.parameters():
+    param.requires_grad = False
+for param in spn.parameters():
     param.requires_grad = False
 
 for param in matrix.parameters():
@@ -117,6 +124,8 @@ optimizer = optim.Adam(matrix.parameters(), opt.lr)
 ################# GLOBAL VARIABLE #################
 contentV = torch.Tensor(opt.batchSize,3,opt.fineSize,opt.fineSize)
 styleV = torch.Tensor(opt.batchSize,3,opt.fineSize,opt.fineSize)
+whitenV = torch.Tensor(opt.batchSize,3,opt.fineSize,opt.fineSize)
+
 
 ################# GPU  #################
 if(opt.cuda):
@@ -124,8 +133,10 @@ if(opt.cuda):
     dec.cuda()
     vgg5.cuda()
     matrix.cuda()
+    spn.cuda()
     contentV = contentV.cuda()
     styleV = styleV.cuda()
+    whitenV = whitenV.cuda()
 
 
 
@@ -136,9 +147,10 @@ transform = transforms.Compose([
 
 content = Image.open("Horse.tga").convert("RGB") #renderUtil.textureLoader("Horse.tga",opt.fineSize)
 content = transform(content).unsqueeze(0)
-style = Image.open("0002.png").convert("RGB")
+style = Image.open("0001.png").convert("RGB")
 style = transform(style).unsqueeze(0)
 model = renderUtil.modelLoader("horse2.obj")
+whitenImg = whiten(content.view(3,-1).double())
 ################# TRAINING #################
 def adjust_learning_rate(optimizer, iteration):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
@@ -151,6 +163,7 @@ for iteration in range(1,opt.niter+1):
 
     contentV.resize_(content.size()).copy_(content)
     styleV.resize_(style.size()).copy_(style)
+    whitenV.resize_(whitenImg.size()).copy_(whitenImg)
 
     # forward
 
@@ -164,6 +177,9 @@ for iteration in range(1,opt.niter+1):
         feature,transmatrix = matrix(cF,sF)
 
     transfer = dec(feature)
+    whitenV = whitenV.view(3,opt.fineSize,opt.fineSize).unsqueeze(0)
+
+    transfer = spn(transfer,whitenV)
     texture = transfer.clamp(0,1)
     #print(texture.shape)
     texture = torch.swapaxes(texture,1,2)
@@ -175,8 +191,8 @@ for iteration in range(1,opt.niter+1):
     #print(texture.shape)
     #render
     if iteration % 1 == 0 or iteration < 5:
-        vutils.save_image(transfer,f'./generatedTexture/transfered_{iteration}.png',normalize=True,scale_each=True,nrow=opt.batchSize)
-        print('Transferred image saved at transfered.png')
+        vutils.save_image(transfer,f'./generatedTextureSPN/transferedSPN_{iteration}.png',normalize=True,scale_each=True,nrow=opt.batchSize)
+        print(f'Transferred image saved at transfered_{iteration}.png')
     views = renderUtil.randomViewRender(model[0],model[1],model[2],model[3],texture,views=6,size=opt.fineSize,iter=iteration)
 
 

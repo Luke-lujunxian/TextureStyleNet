@@ -82,8 +82,8 @@ def textureLoader(path:str,fineSize):
     return transform(texture).cuda()
 #https://github.com/pywavefront/PyWavefront/issues/87
 
-def randomViewRender(vtx_pos, pos_idx, vtx_uv, uv_idx, tex, views=6, display = False,size = 1024):
-    ang = 45
+def randomViewRender(vtx_pos, pos_idx, vtx_uv, uv_idx, tex, views=6, display = False,size = 1024,iter=0):
+    ang = 0.01 * iter * views
     glctx = dr.RasterizeGLContext()
     results = []
     for _ in range(views):
